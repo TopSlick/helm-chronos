@@ -111,10 +111,24 @@
     (action . (("Add timer" . helm-chronos--parse-string-and-add-timer))))
   "Helm source to select from recent non-standard timers list.")
 
+;; (defvar helm-chronos--fallback-source
+;;   '((name . "Enter <expiry time spec>/<message>")
+;;     (candidates  . (list ""))
+;;     (action . (("Add timer" . helm-chronos--parse-string-and-add-timer))))
+;;   "Helm source to create a new timer")
+
 (defvar helm-chronos--fallback-source
-  '((name . "Enter <expiry time spec>/<message>")
-    (dummy)
-    (action . (("Add timer" . helm-chronos--parse-string-and-add-timer)))))
+  (helm-build-dummy-source "Enter <expiry time spec>/<message>"
+    :filtered-candidate-transformer
+    (lambda (_candidates _source)
+      (list (or (and (not (string= helm-pattern ""))
+		     helm-pattern)
+		"Enter a timer to start")))
+    :action '(("Add timer" . (lambda (candidate)
+			       (if (string= helm-pattern "")
+				   (message "No timer")
+				   (helm-chronos--parse-string-and-add-timer helm-pattern)))))))
+
 
 ;;;###autoload
 (defun helm-chronos-add-timer ()
